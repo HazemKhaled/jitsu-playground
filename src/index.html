@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Jitsu Functions Playground</title>
+  <meta name="author" content="Hazem Khaled">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 20px;
+      background: #1a1d27;
+      border-bottom: 1px solid #2d3148;
+      flex-shrink: 0;
+    }
+    header h1 { font-size: 15px; font-weight: 600; color: #a78bfa; letter-spacing: 0.02em; }
+    header span { font-size: 12px; color: #64748b; }
+
+    .main {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* === PIPELINE PANEL === */
+    .pipeline-panel {
+      width: 320px;
+      min-width: 260px;
+      background: #13151f;
+      border-right: 1px solid #2d3148;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 12px 16px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #64748b;
+      border-bottom: 1px solid #2d3148;
+      flex-shrink: 0;
+    }
+
+    #steps-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .step-card {
+      background: #1a1d27;
+      border: 1px solid #2d3148;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .step-card.has-result-passed { border-color: #22c55e44; }
+    .step-card.has-result-dropped { border-color: #f59e0b44; }
+    .step-card.has-result-error { border-color: #ef444444; }
+
+    .step-card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+    }
+
+    .step-num {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #2d3148;
+      font-size: 11px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: #94a3b8;
+    }
+
+    .step-select {
+      flex: 1;
+      background: #0f1117;
+      border: 1px solid #2d3148;
+      color: #e2e8f0;
+      font-size: 12px;
+      padding: 4px 8px;
+      border-radius: 5px;
+      outline: none;
+    }
+    .step-select:focus { border-color: #7c3aed; }
+
+    .btn-icon {
+      width: 24px;
+      height: 24px;
+      border: none;
+      background: transparent;
+      color: #475569;
+      cursor: pointer;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    .btn-icon:hover { background: #2d3148; color: #e2e8f0; }
+
+    .connector {
+      display: flex;
+      justify-content: center;
+      color: #3d4466;
+      font-size: 16px;
+      line-height: 1;
+      padding: 1px 0;
+      flex-shrink: 0;
+    }
+
+    .add-step-btn {
+      margin: 8px;
+      padding: 8px;
+      background: transparent;
+      border: 1px dashed #2d3148;
+      color: #64748b;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 12px;
+      width: calc(100% - 16px);
+      flex-shrink: 0;
+    }
+    .add-step-btn:hover { border-color: #7c3aed; color: #a78bfa; }
+
+    /* === CONTENT PANEL === */
+    .content-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .editors-row {
+      display: flex;
+      flex: 0 0 45%;
+      border-bottom: 1px solid #2d3148;
+      overflow: hidden;
+    }
+
+    .editor-pane {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .editor-pane + .editor-pane {
+      border-left: 1px solid #2d3148;
+    }
+
+    .editor-pane .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .pane-actions { display: flex; gap: 6px; }
+    .btn-sm {
+      padding: 3px 10px;
+      font-size: 11px;
+      border: 1px solid #2d3148;
+      background: #1a1d27;
+      color: #94a3b8;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .btn-sm:hover { border-color: #7c3aed; color: #a78bfa; }
+
+    .code-editor {
+      flex: 1;
+      background: #0f1117;
+      border: none;
+      color: #e2e8f0;
+      font-size: 12px;
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      padding: 12px 14px;
+      resize: none;
+      outline: none;
+      line-height: 1.6;
+      overflow: auto;
+    }
+
+    /* === RESULTS PANEL === */
+    .results-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .results-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 16px;
+      border-bottom: 1px solid #2d3148;
+      flex-shrink: 0;
+    }
+
+    #run-btn {
+      padding: 6px 20px;
+      background: #7c3aed;
+      border: none;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    #run-btn:hover { background: #6d28d9; }
+    #run-btn:disabled { background: #2d3148; color: #475569; cursor: not-allowed; }
+
+    #status-msg { font-size: 12px; color: #64748b; }
+
+    #results-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px 12px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .result-card {
+      min-width: 340px;
+      max-width: 480px;
+      background: #1a1d27;
+      border: 1px solid #2d3148;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .result-card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-bottom: 1px solid #2d3148;
+      flex-shrink: 0;
+    }
+
+    .badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .badge-passed  { background: #166534; color: #86efac; }
+    .badge-dropped { background: #7c2d12; color: #fdba74; }
+    .badge-error   { background: #7f1d1d; color: #fca5a5; }
+
+    .result-fn-name { font-size: 12px; font-weight: 600; flex: 1; color: #cbd5e1; }
+    .result-duration { font-size: 11px; color: #475569; }
+
+    .result-tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid #2d3148;
+      flex-shrink: 0;
+    }
+    .result-tab {
+      padding: 5px 12px;
+      font-size: 11px;
+      color: #64748b;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+    }
+    .result-tab.active { color: #a78bfa; border-bottom-color: #7c3aed; }
+
+    .result-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px 12px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 11px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-all;
+      color: #94a3b8;
+      min-height: 80px;
+      max-height: 300px;
+    }
+
+    .log-entry { margin-bottom: 2px; }
+    .log-info  { color: #94a3b8; }
+    .log-warn  { color: #fbbf24; }
+    .log-error { color: #f87171; }
+    .log-debug { color: #64748b; }
+
+    .empty-results {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      color: #2d3148;
+      font-size: 13px;
+    }
+
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #2d3148; border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>⚡ Jitsu Functions Playground</h1>
+  <span>Local debugging environment &mdash; by <a href="https://hazemkhaled.com" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none;border-bottom:1px solid rgba(255,255,255,0.3)">Hazem Khaled</a></span>
+</header>
+
+<div class="main">
+
+  <!-- PIPELINE PANEL -->
+  <div class="pipeline-panel">
+    <div class="panel-header">Pipeline</div>
+    <div id="steps-list"></div>
+    <button class="add-step-btn" id="add-step-btn">+ Add Function</button>
+  </div>
+
+  <!-- CONTENT + RESULTS -->
+  <div class="content-panel">
+
+    <div class="editors-row">
+      <!-- INPUT PAYLOAD -->
+      <div class="editor-pane">
+        <div class="panel-header">
+          Input Payload
+          <div class="pane-actions">
+            <button class="btn-sm" id="fmt-btn">Format</button>
+            <button class="btn-sm" id="sample-btn">Sample</button>
+          </div>
+        </div>
+        <textarea class="code-editor" id="payload-editor" spellcheck="false" placeholder='{ "type": "track", "event": "Order Completed", ... }'></textarea>
+      </div>
+
+      <!-- ENV VARS (shared) -->
+      <div class="editor-pane" style="max-width:240px;">
+        <div class="panel-header">
+          Env Vars
+          <div class="pane-actions">
+            <button class="btn-sm" id="env-clear-btn">Clear</button>
+          </div>
+        </div>
+        <textarea class="code-editor" id="env-editor" spellcheck="false" placeholder="KEY=VALUE, one per line&#10;ACCESS_TOKEN=abc123&#10;DEBUG=true"></textarea>
+      </div>
+
+      <!-- GEO CONTEXT (optional) -->
+      <div class="editor-pane" style="max-width:220px;">
+        <div class="panel-header">
+          Geo Context
+          <div class="pane-actions">
+            <button class="btn-sm" id="geo-clear-btn">Clear</button>
+          </div>
+        </div>
+        <textarea class="code-editor" id="geo-editor" spellcheck="false" placeholder='Optional geo data&#10;{&#10;  "country": { "code": "SA", "name": "Saudi Arabia" },&#10;  "city": { "name": "Riyadh" }&#10;}'></textarea>
+      </div>
+    </div>
+
+    <!-- RESULTS -->
+    <div class="results-panel">
+      <div class="results-toolbar">
+        <button id="run-btn">▶ Run Pipeline</button>
+        <span id="status-msg"></span>
+      </div>
+      <div class="empty-results" id="empty-results">Run the pipeline to see results</div>
+      <div id="results-container"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // ── State ──────────────────────────────────────────────────────────────────
+  let availableFunctions = [];
+  let steps = [];
+  let stepIdCounter = 0;
+  let lastResults = [];
+
+  const SAMPLE_PAYLOAD = {
+    type: "track",
+    event: "Order Completed",
+    messageId: "playground-001",
+    userId: "user_123",
+    anonymousId: "anon_456",
+    properties: {
+      order_id: "ORD-9999",
+      total: 199.99,
+      currency: "SAR",
+      products: [
+        { product_id: "PROD-1", name: "Premium Plan", price: 199.99, quantity: 1, category: "Subscription" }
+      ]
+    },
+    context: {
+      traits: { email: "user@example.com", phone: "+966501234567", name: "Test User" },
+      clientIds: { fbc: "fb.1.123.abc", fbp: "fb.1.456.def" }
+    }
+  };
+
+  // ── Init ───────────────────────────────────────────────────────────────────
+  async function init() {
+    document.getElementById('payload-editor').value = JSON.stringify(SAMPLE_PAYLOAD, null, 2);
+    await loadFunctions();
+    addStep();
+  }
+
+  async function loadFunctions() {
+    try {
+      const res = await fetch('/api/functions');
+      availableFunctions = await res.json();
+    } catch (e) {
+      console.error('Failed to load functions', e);
+    }
+  }
+
+  // ── Steps ──────────────────────────────────────────────────────────────────
+  function addStep(functionPath = '') {
+    const id = ++stepIdCounter;
+    steps.push({ id, functionPath });
+    renderSteps();
+  }
+
+  function removeStep(id) {
+    steps = steps.filter(s => s.id !== id);
+    renderSteps();
+  }
+
+  function renderSteps() {
+    const list = document.getElementById('steps-list');
+    list.innerHTML = '';
+
+    steps.forEach((step, idx) => {
+      if (idx > 0) {
+        const conn = document.createElement('div');
+        conn.className = 'connector';
+        conn.textContent = '↓';
+        list.appendChild(conn);
+      }
+
+      const result = lastResults[idx];
+      const cardClass = result ? `has-result-${result.status}` : '';
+
+      const card = document.createElement('div');
+      card.className = `step-card ${cardClass}`;
+      card.innerHTML = `
+        <div class="step-card-header">
+          <div class="step-num">${idx + 1}</div>
+          <select class="step-select" data-id="${step.id}">
+            <option value="">— select function —</option>
+            ${availableFunctions.map(f =>
+              `<option value="${f.path}" ${f.path === step.functionPath ? 'selected' : ''}>${f.name}</option>`
+            ).join('')}
+          </select>
+          <button class="btn-icon" data-remove="${step.id}" title="Remove">✕</button>
+        </div>
+      `;
+      list.appendChild(card);
+    });
+
+    list.querySelectorAll('.step-select').forEach(el => {
+      el.addEventListener('change', e => {
+        const id = +e.target.dataset.id;
+        const s = steps.find(s => s.id === id);
+        if (s) s.functionPath = e.target.value;
+      });
+    });
+    list.querySelectorAll('[data-remove]').forEach(el => {
+      el.addEventListener('click', e => removeStep(+e.target.dataset.remove));
+    });
+  }
+
+  // ── Run ────────────────────────────────────────────────────────────────────
+  async function runPipeline() {
+    const payloadStr = document.getElementById('payload-editor').value.trim();
+    const geoStr = document.getElementById('geo-editor').value.trim();
+
+    let payload;
+    try { payload = JSON.parse(payloadStr); }
+    catch (e) { setStatus('❌ Invalid JSON in payload', 'error'); return; }
+
+    let geo;
+    if (geoStr) {
+      try { geo = JSON.parse(geoStr); }
+      catch (e) { setStatus('❌ Invalid JSON in geo context', 'error'); return; }
+    }
+
+    const envVars = parseEnvVars(document.getElementById('env-editor').value.trim());
+
+    const pipeline = steps
+      .filter(s => s.functionPath)
+      .map(s => ({ functionPath: s.functionPath }));
+
+    if (!pipeline.length) { setStatus('⚠ Add at least one function to the pipeline', 'warn'); return; }
+
+    const runBtn = document.getElementById('run-btn');
+    runBtn.disabled = true;
+    setStatus('Running…', 'info');
+
+    try {
+      const res = await fetch('/api/run', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ payload, geo, envVars, pipeline }),
+      });
+      lastResults = await res.json();
+      renderResults(lastResults);
+      renderSteps();
+      const total = lastResults.length;
+      const dropped = lastResults.some(r => r.status === 'dropped');
+      const errored = lastResults.some(r => r.status === 'error');
+      setStatus(
+        errored ? `❌ Error in step ${lastResults.findIndex(r => r.status === 'error') + 1}` :
+        dropped ? `⚠ Dropped at step ${lastResults.findIndex(r => r.status === 'dropped') + 1}` :
+        `✓ ${total} step${total !== 1 ? 's' : ''} completed`,
+        errored ? 'error' : dropped ? 'warn' : 'ok'
+      );
+    } catch (e) {
+      setStatus('❌ Server error: ' + e.message, 'error');
+    } finally {
+      runBtn.disabled = false;
+    }
+  }
+
+  function parseEnvVars(text) {
+    const result = {};
+    (text || '').split('\n').forEach(line => {
+      const eq = line.indexOf('=');
+      if (eq > 0) {
+        const key = line.slice(0, eq).trim();
+        const val = line.slice(eq + 1).trim();
+        if (key) result[key] = val;
+      }
+    });
+    return result;
+  }
+
+  // ── Results ────────────────────────────────────────────────────────────────
+  function renderResults(results) {
+    const container = document.getElementById('results-container');
+    const empty = document.getElementById('empty-results');
+    if (empty) empty.style.display = 'none';
+    container.innerHTML = '';
+
+    results.forEach(r => {
+      const card = document.createElement('div');
+      card.className = 'result-card';
+      card.innerHTML = `
+        <div class="result-card-header">
+          <span class="badge badge-${r.status}">${r.status}</span>
+          <span class="result-fn-name">${escHtml(r.name)}</span>
+          <span class="result-duration">${r.durationMs}ms</span>
+        </div>
+        <div class="result-tabs">
+          <div class="result-tab active" data-tab="output">Output</div>
+          <div class="result-tab" data-tab="logs">Logs ${r.logs.length > 0 ? `(${r.logs.length})` : ''}</div>
+        </div>
+        <div class="result-body" id="body-${r.name.replace(/\s/g,'-')}-output">${r.output == null ? '<span style="color:#475569">— dropped —</span>' : escHtml(JSON.stringify(r.output, null, 2))}</div>
+        <div class="result-body" id="body-${r.name.replace(/\s/g,'-')}-logs" style="display:none">${renderLogs(r.logs)}</div>
+      `;
+      container.appendChild(card);
+
+      card.querySelectorAll('.result-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          card.querySelectorAll('.result-tab').forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          const which = tab.dataset.tab;
+          const suffix = r.name.replace(/\s/g,'-');
+          card.querySelector(`#body-${suffix}-output`).style.display = which === 'output' ? '' : 'none';
+          card.querySelector(`#body-${suffix}-logs`).style.display = which === 'logs' ? '' : 'none';
+        });
+      });
+    });
+  }
+
+  function renderLogs(logs) {
+    if (!logs.length) return '<span style="color:#475569">No logs</span>';
+    return logs.map(l =>
+      `<div class="log-entry log-${l.level}">[${l.level.toUpperCase()}] ${escHtml(l.message)}</div>`
+    ).join('');
+  }
+
+  function escHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function setStatus(msg, type = 'info') {
+    const el = document.getElementById('status-msg');
+    el.textContent = msg;
+    el.style.color = type === 'error' ? '#f87171' : type === 'warn' ? '#fbbf24' : type === 'ok' ? '#4ade80' : '#64748b';
+  }
+
+  // ── Toolbar buttons ────────────────────────────────────────────────────────
+  document.getElementById('run-btn').addEventListener('click', runPipeline);
+  document.getElementById('add-step-btn').addEventListener('click', () => addStep());
+  document.getElementById('fmt-btn').addEventListener('click', () => {
+    const el = document.getElementById('payload-editor');
+    try { el.value = JSON.stringify(JSON.parse(el.value), null, 2); } catch {}
+  });
+  document.getElementById('sample-btn').addEventListener('click', () => {
+    document.getElementById('payload-editor').value = JSON.stringify(SAMPLE_PAYLOAD, null, 2);
+  });
+  document.getElementById('env-clear-btn').addEventListener('click', () => {
+    document.getElementById('env-editor').value = '';
+  });
+  document.getElementById('geo-clear-btn').addEventListener('click', () => {
+    document.getElementById('geo-editor').value = '';
+  });
+
+  document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') runPipeline();
+  });
+
+  init();
+</script>
+
+<footer style="text-align:center;padding:12px 0 8px;font-size:12px;color:rgba(255,255,255,0.35)">
+  <a href="https://github.com/hazemkhaled/jitsu-playground" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none">jitsu-playground</a>
+  &mdash; made by <a href="https://hazemkhaled.com" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none">Hazem Khaled</a>
+</footer>
+</body>
+</html>

@@ -1,0 +1,58 @@
+{
+  "name": "jitsu-playground",
+  "version": "1.0.0",
+  "description": "Local debugging playground for Jitsu transformation functions",
+  "author": "Hazem Khaled (https://hazemkhaled.com)",
+  "license": "MIT",
+  "homepage": "https://github.com/hazemkhaled/jitsu-playground#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hazemkhaled/jitsu-playground.git"
+  },
+  "bugs": {
+    "url": "https://github.com/hazemkhaled/jitsu-playground/issues"
+  },
+  "type": "module",
+  "bin": {
+    "jitsu-playground": "./dist/cli.js"
+  },
+  "exports": {
+    ".": "./dist/server.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc && cp src/index.html dist/index.html",
+    "dev": "node --watch --import jiti/register src/cli.ts",
+    "prepublishOnly": "pnpm build"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  },
+  "peerDependencies": {
+    "jiti": ">=2.0.0",
+    "typescript": ">=5.0.0"
+  },
+  "peerDependenciesMeta": {
+    "typescript": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.23",
+    "@types/node": "^22.0.0",
+    "jiti": "^2.0.0",
+    "typescript": "^5.9.3"
+  },
+  "keywords": [
+    "jitsu",
+    "jitsu-functions",
+    "playground",
+    "debugging",
+    "segment"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

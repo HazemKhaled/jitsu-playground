@@ -62,7 +62,7 @@ export function startServer({ functionsDir, port }: ServerOptions): void {
   });
 
   app.get("/api/functions", async (_req, res) => {
-    const jiti = createJiti(projectRoot, { debug: false, fsCache: false });
+    const jiti = createJiti(projectRoot, { debug: false, fsCache: false, moduleCache: false });
     const files = collectFunctionFiles(functionsDir, functionsDir);
     const result: { path: string; name: string; slug: string }[] = [];
 
@@ -88,7 +88,7 @@ export function startServer({ functionsDir, port }: ServerOptions): void {
     const results: StepResult[] = [];
     let current: unknown = payload;
 
-    const jiti = createJiti(projectRoot, { debug: false, fsCache: false });
+    const jiti = createJiti(projectRoot, { debug: false, fsCache: false, moduleCache: false });
 
     // Inject shared envVars into process.env once for the whole pipeline run
     const savedEnv: Record<string, string | undefined> = {};

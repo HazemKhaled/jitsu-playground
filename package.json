@@ -1,6 +1,6 @@
 {
   "name": "jitsu-playground",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Local debugging playground for Jitsu transformation functions",
   "author": "Hazem Khaled (https://hazemkhaled.com)",
   "license": "MIT",
